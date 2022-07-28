@@ -1,0 +1,40 @@
+server:
+  port : 8080
+  servlet:
+    encoding:
+      enabled: true
+      force : true
+      charset : UTF-8
+  tomcat :
+    uri-encoding : UTF-8
+#spring.h2.console.enabled=true
+#spring.datasource.url=jdbc:h2:mem:testdb
+#spring.datasource.driverClassName=org.h2.Driver
+#spring.datasource.username=sa
+#spring.datasource.password=Aa123456
+#spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+#spring.h2.console.path=/h2
+
+spring:
+  thymeleaf:   
+   prefix: classpath:/templates/
+  jpa:
+    show-sql : true
+    hibernate:
+      ddl-auto : update
+  sql : 
+    init : 
+      encoding : utf-8 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/demo
+    username: root
+    password: Aa123456
+    hikari:
+      auto-commit: true
+      connection-test-query: select 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      minimum-idle: 5
+      maximum-pool-size: 10

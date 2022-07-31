@@ -7,18 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping(value = "/account")
-@Tag(name = "檢查服務用")
+@Tag(name = "帳號相關")
 public class AccountController {
-
-//	@Operation(summary = "取得API狀態", description = "確認服務是否運行中")
-//	@RequestMapping(value = "", method = { RequestMethod.GET })
-//	public ResponseEntity<String> addPermission(HttpServletRequest request, HttpServletResponse response) {
-//
-//		ResponseEntity<String> responseEntity = new ResponseEntity<>();
-//		responseEntity.setStatusCode(200);
-//		responseEntity.setStatusMessage("Success");
-//
-//		return responseEntity;
-//	}
 
 }

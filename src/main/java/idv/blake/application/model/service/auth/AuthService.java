@@ -1,4 +1,4 @@
-package idv.blake.application.model.service;
+package idv.blake.application.model.service.auth;
 
 import java.sql.Timestamp;
 import java.util.Date;

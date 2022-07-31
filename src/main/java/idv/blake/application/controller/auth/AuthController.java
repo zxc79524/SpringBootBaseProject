@@ -17,7 +17,7 @@ import idv.blake.application.model.entity.auth.LoginRequestEntity;
 import idv.blake.application.model.entity.auth.LoginResponseEntity;
 import idv.blake.application.model.entity.auth.RefreshTokenRequestEntity;
 import idv.blake.application.model.entity.auth.RegisterRequestEntity;
-import idv.blake.application.model.service.AuthService;
+import idv.blake.application.model.service.auth.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -41,7 +41,6 @@ public class AuthController {
 	@RequestMapping(value = "/register", method = { RequestMethod.POST })
 	public ResponseEntity<LoginResponseEntity> register(@RequestBody RegisterRequestEntity requestEntity,
 			HttpServletRequest request, HttpServletResponse response) throws Exception {
-		System.out.println("=============register=========");
 		return authService.register(requestEntity);
 
 	}
@@ -69,15 +68,5 @@ public class AuthController {
 
 		return authService.refreshToken(requestEntity);
 	}
-
-//
-//    private final RefreshService refreshService;
-//
-//    @ApiOperation(value = "更新Access Token")
-//    @PostMapping("/refresh")
-//    public ResponseDto<LoginDto> refresh(
-//            @Valid @RequestBody RefreshDo refreshDo) throws Exception {
-//        return refreshService.request(null, refreshDo);
-//    }
 
 }

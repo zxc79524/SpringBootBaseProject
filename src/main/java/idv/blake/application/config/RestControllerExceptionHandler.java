@@ -50,18 +50,4 @@ public class RestControllerExceptionHandler extends ResponseEntityExceptionHandl
 		exception.printStackTrace();
 	}
 
-//	@ResponseStatus(value = HttpStatus.BAD_REQUEST)
-//	@ExceptionHandler({ MissingServletRequestParameterException.class, BindException.class,
-//			MethodArgumentNotValidException.class })
-//	public ResponseEntity<?> handleParsingRequestParameterException(Exception exception) {
-//		System.out.println("============================================");
-//		System.out.println(exception.getMessage());
-//
-//		ResponseEntity<String> responseEntity = new ResponseEntity<>();
-//		responseEntity.setStatusCode(HttpStatus.BAD_REQUEST.value());
-//		responseEntity.setStatusMessage(exception.getMessage());
-//
-//		return responseEntity;
-//	}
-
 }

@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 import idv.blake.application.model.dao.account.AccountDao;
 import idv.blake.application.model.dao.auth.TokenDao;
+import idv.blake.application.model.dao.permission.RolePermissionDao;
 
 @EnableWebSecurity
 public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -21,6 +22,9 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private AccountDao accountDao;
+
+	@Autowired
+	private RolePermissionDao rolePermissionDao;
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -35,7 +39,8 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		httpSecurity.cors().and().csrf().disable().exceptionHandling()
 				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)).and()
-				.addFilter(new LoginAuthorizationFilter(authenticationManager(), accountDao, tokenDao))
+				.addFilter(
+						new LoginAuthorizationFilter(authenticationManager(), accountDao, tokenDao, rolePermissionDao))
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 //	        System.out.println("LoginWebSecurityConfig configure http security");

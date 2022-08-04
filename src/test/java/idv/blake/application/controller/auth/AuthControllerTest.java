@@ -96,7 +96,7 @@ class AuthControllerTest extends BaseUnitTest {
 		System.out.println(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
 	}
 
-//	@Test
+	@Test
 	void test() throws Exception {
 
 		// 註冊時的密碼,沒有轉換為SHA256
@@ -204,8 +204,8 @@ class AuthControllerTest extends BaseUnitTest {
 
 		System.out.println(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
 
-//		// 刪除建立的帳號
-//		accountDao.deleteByAccount("Tom");
+		// 刪除建立的帳號
+		accountDao.deleteByAccount("Tom");
 	}
 
 	private ResponseEntity<LoginResponseEntity> fromJsonForResponseEntity(String json) {

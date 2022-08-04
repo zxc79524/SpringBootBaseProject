@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import idv.blake.application.model.dao.account.AccountDao;
 import idv.blake.application.model.dao.permission.AccountRoleDao;
@@ -34,7 +35,20 @@ class SpringBootBaseProjectApplicationTests extends BaseUnitTest {
 	@Autowired
 	RolePermissionDao rolePermissionDao;
 
+	@Autowired
+	StringRedisTemplate stringRedisTemplate;
+
 	@Test
+	public void test() {
+
+		String dataString = stringRedisTemplate.opsForValue().get("sss");
+		
+		stringRedisTemplate.opsForValue().set("test1", "aaaa");
+	
+		System.out.println(dataString);
+	}
+
+//	@Test
 	public void insertData() {
 
 		AccountDbEntity accountDbEntity = accountDao.findByAccount("root");

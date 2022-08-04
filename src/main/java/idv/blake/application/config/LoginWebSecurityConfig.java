@@ -1,6 +1,7 @@
 package idv.blake.application.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -26,6 +27,9 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private RolePermissionDao rolePermissionDao;
 
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
+
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring().antMatchers(HttpMethod.GET, "/swagger-ui/**", "/swagger-ui/index.html", "/v3/**")
@@ -39,8 +43,8 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		httpSecurity.cors().and().csrf().disable().exceptionHandling()
 				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)).and()
-				.addFilter(
-						new LoginAuthorizationFilter(authenticationManager(), accountDao, tokenDao, rolePermissionDao))
+				.addFilter(new LoginAuthorizationFilter(authenticationManager(), accountDao, tokenDao,
+						rolePermissionDao, stringRedisTemplate))
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 //	        System.out.println("LoginWebSecurityConfig configure http security");

@@ -1,11 +1,12 @@
 # 目的
 使用Spring Security 實作基礎的帳號登入和角色權限管理  
 建置依賴環境 :  
-&ensp; MariaDB 10.6.3
+&ensp; MariaDB 10.6.3  
+&ensp; Redis  
 
 ## 初始化 
 1.執行測試案例 SpringBootBaseProjectApplicationTests，預設會建立root 和 user 帳號
-
+2.需自行依照建置環境重新設定MariaDB和Redis參數
 
 ## 執行方式
 
@@ -35,8 +36,11 @@ http://localhost:8080/swagger-ui/index.html
 <img src="doc/token_db_diagram.png" >
 
 ## 權限說明
-一個帳號只允許設定一個角色
+一個帳號只允許設定一個角色  
 一個角色可設定多個API的權限
+
+##### 流程說明
+<img src="doc/token_permission_check.png" >
 
 ##### DB DIAGRAM
 <img src="doc/permission_db_diagram.png" >
@@ -82,6 +86,10 @@ http://localhost:8080/swagger-ui/index.html
 * [jwt.io](https://jwt.io/)
 * [JSON Web Token 入门教程](http://www.ruanyifeng.com/blog/2018/07/json_web_token-tutorial.html)
 * [How to log out when using JWT](https://medium.com/devgorilla/how-to-log-out-when-using-jwt-a8c7823e8a6)
+
+#####  Redis
+* [Spring Boot EP 17：使用Redis記憶體資料庫實現快取機制](https://jovepater.com/article/spring-boot-ep-17-redis-cache/)
+
 
 #####  Other
 * [Eclipse 安装 lombok – 讓撰寫 JAVA 程式更加優雅簡潔](https://polinwei.com/lombok-install-in-eclipse/)

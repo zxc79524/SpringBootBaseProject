@@ -11,8 +11,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import com.google.gson.Gson;
 
 import idv.blake.application.model.dao.account.AccountDao;
 import idv.blake.application.model.dao.auth.TokenDao;
@@ -21,8 +24,10 @@ import idv.blake.application.model.entity.account.AccountDbEntity;
 import idv.blake.application.model.entity.auth.TokenDbEntity;
 import idv.blake.application.model.entity.permission.PermissionDbEntity;
 import idv.blake.application.model.entity.permission.RolePermissionDbEntity;
-import idv.blake.application.model.entity.security.AuthRecord;
+import idv.blake.application.model.entity.security.AuthRecordData;
+import idv.blake.application.model.entity.security.AuthRecordListData;
 import idv.blake.application.model.exception.UnauthorizedException;
+import idv.blake.application.util.StringUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 
@@ -32,18 +37,19 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 	private RolePermissionDao rolePermissionDao;
 	private TokenDao tokenDao;
 
+	private StringRedisTemplate stringRedisTemplate;
+
 	public LoginAuthorizationFilter(AuthenticationManager authenticationManager, AccountDao accountDao,
-			TokenDao tokenDao, RolePermissionDao rolePermissionDao) {
+			TokenDao tokenDao, RolePermissionDao rolePermissionDao, StringRedisTemplate stringRedisTemplate) {
 		super(authenticationManager);
 		this.accountDao = accountDao;
 		this.tokenDao = tokenDao;
 		this.rolePermissionDao = rolePermissionDao;
+		this.stringRedisTemplate = stringRedisTemplate;
 	}
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-
-//		System.out.println(String.format("%s + %s", request.getRequestURI(), request.getMethod()));
 
 		return false;
 	}
@@ -51,7 +57,6 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
 			throws IOException, ServletException {
-//		System.out.println("=====LoginAuthorizationFilter======");
 
 		String accessToken = request.getHeader(SecurityConfig.ACCESS_HEADER);
 
@@ -64,17 +69,12 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 			String uidString = getUidFromAccessToken(accessToken.replace(SecurityConfig.ACCESS_PREFIX, ""));
 			request.setAttribute("uid", uidString);
 
-			List<AuthRecord> authRecords = getAuthFormUid(uidString);
+			AuthRecordListData authRecords = getPermissionFormUid(uidString);
 			String servletPath = request.getServletPath().toLowerCase();
 
-//			System.out.println("servletPath :" + servletPath);
-//			System.out.println("request.getMethod() :" + request.getMethod());
-//			System.out.println(new Gson().toJson(authRecords));
-
-			for (AuthRecord record : authRecords) {
+			for (AuthRecordData record : authRecords.getAuthRecordDatas()) {
 				Pattern FILTERS = Pattern.compile(record.getApiUrl());
 				if (FILTERS.matcher(servletPath).matches() && request.getMethod().equals(record.getHttpMethod())) {
-//					System.out.println(new Gson().toJson(record));
 					if (record.isAllow()) {
 
 						chain.doFilter(request, response);
@@ -82,8 +82,6 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 					}
 				}
 			}
-
-//			System.out.println(new Gson().toJson(authEntities));
 
 			response.sendError(403, "User permission denied");
 			return;
@@ -98,8 +96,19 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 	}
 
 	@Transactional
-	private List<AuthRecord> getAuthFormUid(String uid) throws UnauthorizedException {
-		List<AuthRecord> authRecords = new ArrayList<>();
+	private AuthRecordListData getPermissionFormUid(String uid) throws UnauthorizedException {
+
+		String cacheKey = String.format("permission-%s", uid);
+
+		String cache = stringRedisTemplate.opsForValue().get(cacheKey);
+		if (!StringUtil.isEmpty(cache)) {
+
+			AuthRecordListData recordListData = new Gson().fromJson(cache, AuthRecordListData.class);
+
+			if (recordListData.getExpiredTime() > System.currentTimeMillis()) {
+				return recordListData;
+			}
+		}
 
 		AccountDbEntity accountDbEntity = accountDao.findByUid(uid);
 		if (accountDbEntity == null) {
@@ -118,29 +127,32 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 					accountDbEntity.getAccountRole().getRole().getRoleId()));
 		}
 
+		List<AuthRecordData> authRecords = new ArrayList<>();
+
 		for (RolePermissionDbEntity rolePermissionDbEntity : rolePermissionDbEntities) {
 
 			PermissionDbEntity permissionDbEntity = rolePermissionDbEntity.getPermission();
 
-			AuthRecord authEntity = AuthRecord.builder().apiUrl(permissionDbEntity.getApiUrl())
+			AuthRecordData authEntity = AuthRecordData.builder().apiUrl(permissionDbEntity.getApiUrl())
 					.httpMethod(permissionDbEntity.getHttpMethod()).permissionId(permissionDbEntity.getPermissionId())
 					.isAllow(rolePermissionDbEntity.getIsAllow()).build();
 
 			authRecords.add(authEntity);
 		}
 
-		return authRecords;
+		AuthRecordListData recordListData = AuthRecordListData.builder().authRecordDatas(authRecords)
+				.expiredTime(System.currentTimeMillis() + SecurityConfig.PERMISSION_REDIS_EXPIRATION_TIME).build();
+		stringRedisTemplate.opsForValue().set(cacheKey, new Gson().toJson(recordListData));
+
+		return recordListData;
 
 	}
 
 	private String getUidFromAccessToken(String accessToken) throws UnauthorizedException {
-//		System.out.println("=====checkAccessToken======");
-//		System.out.println(accessToken);
 		Claims result;
 		try {
 			result = Jwts.parser().setSigningKey(SecurityConfig.ACCESS_SECRET.getBytes()).parseClaimsJws(accessToken)
 					.getBody();
-//			System.out.println(new Gson().toJson(result));
 
 		} catch (Exception e) {
 			throw new UnauthorizedException("Token fail");
@@ -158,5 +170,4 @@ public class LoginAuthorizationFilter extends BasicAuthenticationFilter {
 		return tokenDbEntity.getAccount().getUid();
 	}
 
-//	
 }

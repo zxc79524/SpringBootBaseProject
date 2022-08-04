@@ -6,24 +6,18 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import idv.blake.application.BaseUnitTest;
-import idv.blake.application.config.LoginAuthorizationFilter;
 import idv.blake.application.config.SecurityConfig;
 import idv.blake.application.model.dao.account.AccountDao;
 import idv.blake.application.model.dao.auth.TokenDao;
@@ -55,26 +49,11 @@ class AuthControllerTest extends BaseUnitTest {
 	public static String CHECK_TOKEN_URL = "/check/token";
 
 	private MockMvc mvc;
-	private MockMvc loginMvc;
 
 	@BeforeAll
 	public static void beforeClass() {
 
 		System.out.println("@BeforeClass");
-	}
-
-	@BeforeEach
-	public void setup() {
-		mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		loginMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-				.addFilter(new LoginAuthorizationFilter(new AuthenticationManager() {
-
-					@Override
-					public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-						// TODO Auto-generated method stub
-						return null;
-					}
-				}, accountDao, tokenDao, rolePermissionDao)).build();
 	}
 
 	@Test
@@ -194,13 +173,6 @@ class AuthControllerTest extends BaseUnitTest {
 						.content(toJson(
 								new RefreshTokenRequestEntity(responseEntity.getResultData().getRefreshToken()))))
 				.andExpect(status().is(200)).andReturn();
-
-		System.out.println(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
-
-		// 測試token 是否正常驗證
-
-		result = loginMvc.perform(MockMvcRequestBuilders.get(CHECK_TOKEN_URL).accept(MediaType.APPLICATION_JSON)
-				.header("Content-TYPE", MediaType.APPLICATION_JSON)).andExpect(status().is(401)).andReturn();
 
 		System.out.println(result.getResponse().getContentAsString(StandardCharsets.UTF_8));
 

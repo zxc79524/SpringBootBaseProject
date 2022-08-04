@@ -13,4 +13,7 @@ public class SecurityConfig {
 
 	public static final String AUTH_URL = "/auth";
 
+//	public static final long PERMISSION_REDIS_EXPIRATION_TIME = 1 * 24 * 60 * 60 * 1000;
+	public static final long PERMISSION_REDIS_EXPIRATION_TIME = 5 * 60 * 1000;
+
 }

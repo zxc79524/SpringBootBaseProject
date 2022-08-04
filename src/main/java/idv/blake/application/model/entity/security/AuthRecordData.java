@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class AuthRecord {
+public class AuthRecordData {
 
 	private String permissionId;
 	private String httpMethod;

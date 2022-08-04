@@ -6,7 +6,7 @@
 
 ## 初始化 
 1.需自行依照建置環境,重新設定[application.yml](src/main/resources/application.yml)中的MariaDB和Redis參數  
-2.建置資料庫可手動執行[schema.sql](src/main/resources/sql/schema.sql)  
+2.建置資料庫可手動執行[schema.sql](src/main/resources/sql/schema.sql)  或是使用調整[application.yml](src/main/resources/application.yml) 中的spring.jpa.hibernate.ddl-auto, 建議手動建置   
 3.執行測試案例 SpringBootBaseProjectApplicationTests，預設會建立root 和 user 帳號  
 
 

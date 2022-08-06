@@ -90,7 +90,12 @@ http://localhost:8080/swagger-ui/index.html
 * [How to log out when using JWT](https://medium.com/devgorilla/how-to-log-out-when-using-jwt-a8c7823e8a6)
 
 #####  Redis
+* [Redis Documentation](https://redis.io/docs/)
+* [Redis Command Reference](https://redis.io/commands/)
+* [Redis configuration](https://redis.io/docs/manual/config/)
 * [Spring Boot EP 17：使用Redis記憶體資料庫實現快取機制](https://jovepater.com/article/spring-boot-ep-17-redis-cache/)
+* [什么是缓存雪崩、缓存击穿、缓存穿透？](https://zhuanlan.zhihu.com/p/346651831)
+* [redis：设置键的生存时间和过期时间](https://zhuanlan.zhihu.com/p/54758076)
 
 
 #####  Other

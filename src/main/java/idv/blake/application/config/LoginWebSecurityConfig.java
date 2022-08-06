@@ -1,7 +1,6 @@
 package idv.blake.application.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,9 +10,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
-import idv.blake.application.model.dao.account.AccountDao;
 import idv.blake.application.model.dao.auth.TokenDao;
-import idv.blake.application.model.dao.permission.RolePermissionDao;
+import idv.blake.application.model.service.auth.AuthService;
 
 @EnableWebSecurity
 public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -22,13 +20,7 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 	private TokenDao tokenDao;
 
 	@Autowired
-	private AccountDao accountDao;
-
-	@Autowired
-	private RolePermissionDao rolePermissionDao;
-
-	@Autowired
-	private StringRedisTemplate stringRedisTemplate;
+	private AuthService authService;
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -43,8 +35,7 @@ public class LoginWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		httpSecurity.cors().and().csrf().disable().exceptionHandling()
 				.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)).and()
-				.addFilter(new LoginAuthorizationFilter(authenticationManager(), accountDao, tokenDao,
-						rolePermissionDao, stringRedisTemplate))
+				.addFilter(new LoginAuthorizationFilter(authenticationManager(), authService, tokenDao))
 				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
 //	        System.out.println("LoginWebSecurityConfig configure http security");

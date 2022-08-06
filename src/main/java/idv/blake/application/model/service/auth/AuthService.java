@@ -1,12 +1,17 @@
 package idv.blake.application.model.service.auth;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.Gson;
 
 import idv.blake.application.config.SecurityConfig;
 import idv.blake.application.model.dao.account.AccountDao;
@@ -20,6 +25,10 @@ import idv.blake.application.model.entity.auth.RefreshTokenDbEntity;
 import idv.blake.application.model.entity.auth.RefreshTokenRequestEntity;
 import idv.blake.application.model.entity.auth.RegisterRequestEntity;
 import idv.blake.application.model.entity.auth.TokenDbEntity;
+import idv.blake.application.model.entity.permission.PermissionDbEntity;
+import idv.blake.application.model.entity.permission.RolePermissionDbEntity;
+import idv.blake.application.model.entity.security.AuthRecordData;
+import idv.blake.application.model.entity.security.AuthRecordListData;
 import idv.blake.application.model.exception.AlreadyExistExceptionException;
 import idv.blake.application.model.exception.InvalidArgumentException;
 import idv.blake.application.model.exception.UnauthorizedException;
@@ -42,6 +51,9 @@ public class AuthService {
 
 	@Autowired
 	private TokenDao tokenDao;
+
+	@Autowired
+	private StringRedisTemplate stringRedisTemplate;
 
 	/**
 	 * 註冊
@@ -253,20 +265,64 @@ public class AuthService {
 
 	}
 
-//	
-//	
-//	
-//
-//	private AccountDo findAccount(LoginDo loginDo) {
-//		AccountDo accountDo = accountRepository.findByAccount(loginDo.getAccount());
-//		if (accountDo == null) {
-//			WarningException exception = new WarningException("account.does.not.exist");
-//			throw exception;
-//		}
-//		String password = loginDo.getPassword();
-//		if (!bCryptPasswordEncoder.matches(password, accountDo.getPassword())) {
-//			throw new WarningException("password.error");
-//		}
-//		return accountDo;
-//	}
+	/**
+	 * 回傳權限資料by Uid
+	 * 
+	 * 
+	 * @param uid
+	 * @return
+	 * @throws UnauthorizedException
+	 */
+	@Transactional
+	public AuthRecordListData getPermission(String uid) throws UnauthorizedException {
+
+		String cacheKey = String.format("permission-%s", uid);
+
+		String cache = stringRedisTemplate.opsForValue().get(cacheKey);
+		if (!StringUtil.isEmpty(cache)) {
+
+			AuthRecordListData recordListData = new Gson().fromJson(cache, AuthRecordListData.class);
+
+			if (recordListData.getExpiredTime() > System.currentTimeMillis()) {
+				return recordListData;
+			}
+		}
+
+		AccountDbEntity accountDbEntity = accountDao.findByUid(uid);
+		if (accountDbEntity == null) {
+			throw new UnauthorizedException(String.format("Not Found Account by uid [%s]", uid));
+		}
+
+		if (accountDbEntity.getAccountRole() == null) {
+			throw new UnauthorizedException(String.format("uid [%s] not hava role", uid));
+		}
+
+		List<RolePermissionDbEntity> rolePermissionDbEntities = accountDbEntity.getAccountRole().getRole()
+				.getRolePermission();
+
+		if (rolePermissionDbEntities == null) {
+			throw new UnauthorizedException(String.format("uid [%s] role [%s] not have permission", uid,
+					accountDbEntity.getAccountRole().getRole().getRoleId()));
+		}
+
+		List<AuthRecordData> authRecords = new ArrayList<>();
+
+		for (RolePermissionDbEntity rolePermissionDbEntity : rolePermissionDbEntities) {
+
+			PermissionDbEntity permissionDbEntity = rolePermissionDbEntity.getPermission();
+
+			AuthRecordData authEntity = AuthRecordData.builder().apiUrl(permissionDbEntity.getApiUrl())
+					.httpMethod(permissionDbEntity.getHttpMethod()).permissionId(permissionDbEntity.getPermissionId())
+					.isAllow(rolePermissionDbEntity.getIsAllow()).build();
+
+			authRecords.add(authEntity);
+		}
+
+		AuthRecordListData recordListData = AuthRecordListData.builder().authRecordDatas(authRecords)
+				.expiredTime(System.currentTimeMillis() + SecurityConfig.PERMISSION_REDIS_EXPIRATION_TIME).build();
+		stringRedisTemplate.opsForValue().set(cacheKey, new Gson().toJson(recordListData));
+
+		return recordListData;
+
+	}
 }
